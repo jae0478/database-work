@@ -3,10 +3,11 @@
 #include <stdlib.h>
 #define MAX_QUEUE 200
 
-typedef enum { false, true }bool;
-typedef int Data;
+typedef enum { false, true } bool;
+typedef struct TreeNode* Data;
 
 int arr[200] = {0,};
+
 typedef struct TreeNode {
 	int val;
 	struct TreeNode *left;
@@ -16,7 +17,7 @@ typedef struct TreeNode {
 typedef struct {
 	int front, rear;
 	Data items[MAX_QUEUE];
-}Queue;
+} Queue;
 
 void InitQueue(Queue *pqueue)
 {
@@ -41,44 +42,42 @@ void EnQueue(Queue *pqueue, Data item)
 {
 	if (IsFull(pqueue))
 		exit(1);
-	pqueue->rear = (pqueue->rear + 1) % MAX_QUEUE;
 	pqueue->items[pqueue->rear] = item;
-	if (pqueue->front == -1)
-		pqueue->front = pqueue->rear;
+	pqueue->rear = (pqueue->rear + 1) % MAX_QUEUE;
 }
 
 void DeQueue(Queue *pqueue)
 {
 	if (IsEmpty(pqueue))
-		exit(1); //error: empty stack
+		exit(1); // 에러: 비어 있는 큐
 	pqueue->front = (pqueue->front + 1) % MAX_QUEUE;
 }
 
-TreeNode* levelorder(int arr[], int size){
+TreeNode* levelorder(int arr[], int size) {
 	if (size <= 0)
 		return NULL;
 	
 	TreeNode* root = (TreeNode*)malloc(sizeof(TreeNode));
-	root->val = arr[];
+	root->val = arr[0];
 	root->left = NULL;
 	root->right = NULL;
 	
 	Queue queue;
 	InitQueue(&queue);
-	Enqueue(&queue, root);
+	EnQueue(&queue, root);
 	
 	int i = 1;
-	while(i < size){
-		TreeNode* parentNode = Peek(queue);
-		Dequeue(queue);
+	while (i < size) {
+		TreeNode* parentNode = Peek(&queue);
+		DeQueue(&queue);
 		
-		if (arr[i] != -1){
+		if (arr[i] != -1) {
 			TreeNode* left_child = (TreeNode*)malloc(sizeof(TreeNode));
 			left_child->val = arr[i];
 			left_child->left = NULL;
 			left_child->right = NULL;
 			parentNode->left = left_child;
-			Enqueue(queue, left_child);
+			EnQueue(&queue, left_child);
 		}
 		else if (arr[i] == -1){
 			TreeNode* Node_null = (TreeNode*)malloc(sizeof(TreeNode));
@@ -89,13 +88,13 @@ TreeNode* levelorder(int arr[], int size){
 		}
 		i++;
 		
-		if (i<size && arr[i] != -1){
+		if (i < size && arr[i] != -1) {
 			TreeNode* right_child = (TreeNode*)malloc(sizeof(TreeNode));
 			right_child->val = arr[i];
 			right_child->left = NULL;
-			right_child->right= NULL;
+			right_child->right = NULL;
 			parentNode->right = right_child;
-			Enqueue(queue, right_child);
+			EnQueue(&queue, right_child);
 		}
 		else if(i< size && arr[i] == -1){
 			TreeNode* Node_null = (TreeNode*)malloc(sizeof(TreeNode));
@@ -104,38 +103,88 @@ TreeNode* levelorder(int arr[], int size){
 			Node_null->right= NULL;
 			parentNode->right = Node_null;
 		}
+		i++;
 	}
-}
-TreeNode* solution (TreeNode * root) {
-	// good luck
-	
 	return root;
 }
 
-void printTree(TreeNode* root){
-	if (root != NULL){
-		printf("%d ", root->val);
-		printTree(root->left_child);
-		printTree(root->right_child);
+TreeNode* solution(TreeNode* root) {
+	if (root == NULL || root->val == -1)
+		return NULL;
+	
+	root->left = solution(root->left);
+	root->right = solution(root->right);
+	
+	if ((root->left == NULL || root->left->val == -1) &&
+	    (root->right == NULL || root->right->val == -1) && 
+	    root->val == 0) {
+		free(root->left);
+		free(root->right);
+		
+		root->left = NULL;
+		root->right = NULL;
+		
+		root->val = -1;
+	}
+	return root;
+}
+
+void printTree(TreeNode* root) {
+	if (root == NULL)
+		return;
+	
+	Queue queue;
+	InitQueue(&queue);
+	EnQueue(&queue, root);
+	
+	TreeNode* lastNode = NULL;
+	TreeNode* lastRightNode = NULL;
+
+	while (!IsEmpty(&queue)) {
+		TreeNode* currentNode = Peek(&queue);
+		DeQueue(&queue);
+
+		if (currentNode != NULL) {
+			lastNode = currentNode;
+			if (currentNode->right != NULL) {
+				lastRightNode = currentNode->right;
+			}
+			EnQueue(&queue, currentNode->left);
+			EnQueue(&queue, currentNode->right);
+		}
+	}
+	// 다시 큐를 초기화하고 마지막 오른쪽 노드를 제외한 노드들을 출력
+	InitQueue(&queue);
+	EnQueue(&queue, root);
+	while (!IsEmpty(&queue)) {
+		TreeNode* currentNode = Peek(&queue);
+		DeQueue(&queue);
+		if (currentNode != NULL) {
+			if (currentNode != lastRightNode || currentNode->val != -1) {
+				printf("%d ", currentNode->val);
+			}
+			EnQueue(&queue, currentNode->left);
+			EnQueue(&queue, currentNode->right);
+		}
 	}
 }
 
 int main() {
 
-	// DO NOT MODIFY //
-	int i=0, cnt=0;
+	// 수정하지 마시오 //
+	int i = 0, cnt = 0;
 	char str[400] = {0,};
 	char *s;
-	scanf("%[^\n]", str);	
+	scanf("%[^\n]", str);
 	for (i = 2; i > 1; cnt += i > 0) {
-  	i = sscanf(str, "%d%*[ ]%[^\n]", &arr[cnt], str);
+		i = sscanf(str, "%d%*[ ]%[^\n]", &arr[cnt], str);
 	}
-	// 위 코드를 수행하면 arr 에는 각 원소에 입력으로 받은 노드들이 저장됩니다.
+	// 위 코드를 수행하면 arr에는 각 원소에 입력으로 받은 노드들이 저장됩니다.
 	///////////////////
 	
-	Levelorder(&root);
-	root = solution(&root);
-	// print tree as array
-	printTree(&root);
+	TreeNode* root = levelorder(arr, cnt);
+	root = solution(root);
+	// 트리를 배열 형태로 출력
+	printTree(root);
 	return 0;
 }

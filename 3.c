@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-// 1 2 3 4 5 6 7 8 9 10 11
+// 1 2 3 4 5 6 7 8 9 10
 int arr[200] = {0,};
 typedef struct TreeNode {
     int val;

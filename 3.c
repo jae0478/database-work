@@ -1,135 +1,129 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#define MAX_QUEUE 200
-
-typedef enum { false, true }bool;
-typedef int Data;
 
 int arr[200] = {0,};
 typedef struct TreeNode {
-	int val;
-	struct TreeNode *left;
-	struct TreeNode *right;
+    int val;
+    struct TreeNode *left;
+    struct TreeNode *right;
 } TreeNode;
 
-typedef struct {
-	int front, rear;
-	Data items[MAX_QUEUE];
-}Queue;
-
-void InitQueue(Queue *pqueue)
-{
-	pqueue->front = pqueue->rear = 0;
+// Function to create a new TreeNode
+TreeNode* newTreeNode(int value) {
+    TreeNode* node = (TreeNode*) malloc(sizeof(TreeNode));
+    if (!node) return NULL;
+    node->val = value;
+    node->left = NULL;
+    node->right = NULL;
+    return node;
 }
 
-bool IsEmpty(Queue *pqueue){
-	return pqueue->front == pqueue->rear;
+// Function to create a new queue node
+Node* newNode(TreeNode *node) {
+    Node* new_node = (Node*) malloc(sizeof(Node));
+    if (!new_node) return NULL;
+    new_node->treenode = node;
+    new_node->next = NULL;
+    return new_node;
 }
 
-bool IsFull(Queue *pqueue){
-	return pqueue->front == (pqueue->rear + 1) % MAX_QUEUE;
+// Function to add to queue
+void enqueue(Node **head, TreeNode *node) {
+    Node *new_node = newNode(node);
+    if (*head == NULL) {
+        *head = new_node;
+    } else {
+        Node *temp = *head;
+        while (temp->next != NULL) {
+            temp = temp->next;
+        }
+        temp->next = new_node;
+    }
 }
 
-Data Peek(Queue *pqueue){
-	if (IsEmpty(pqueue))
-		exit(1);
-	return pqueue->items[pqueue->front];
+// Function to remove from queue
+TreeNode* dequeue(Node **head) {
+    if (*head == NULL) return NULL;
+    Node* temp = *head;
+    TreeNode* result = temp->treenode;
+    *head = temp->next;
+    free(temp);
+    return result;
 }
 
-void EnQueue(Queue *pqueue, Data item)
-{
-	if (IsFull(pqueue))
-		exit(1);
-	pqueue->rear = (pqueue->rear + 1) % MAX_QUEUE;
-	pqueue->items[pqueue->rear] = item;
-	if (pqueue->front == -1)
-		pqueue->front = pqueue->rear;
+// Function to create a tree from an array
+TreeNode* createTree(int array[], int len) {
+    if (array == NULL || len == 0) {
+        return NULL;
+    }
+
+    Node *treeNodeQueue = NULL;
+    int index = 1;
+    
+    TreeNode *treeNode = newTreeNode(array[0]);
+    enqueue(&treeNodeQueue, treeNode);
+
+    while (index < len) {
+        TreeNode *current = dequeue(&treeNodeQueue);
+        if (index < len && array[index] != -1) { // assuming -1 as NULL
+            TreeNode *left = newTreeNode(array[index]);
+            current->left = left;
+            enqueue(&treeNodeQueue, left);
+        }
+        index++;
+        if (index < len && array[index] != -1) { // assuming -1 as NULL
+            TreeNode *right = newTreeNode(array[index]);
+            current->right = right;
+            enqueue(&treeNodeQueue, right);
+        }
+        index++;
+    }
+    return treeNode;
 }
 
-void DeQueue(Queue *pqueue)
-{
-	if (IsEmpty(pqueue))
-		exit(1); //error: empty stack
-	pqueue->front = (pqueue->front + 1) % MAX_QUEUE;
+int* treeToArray(TreeNode *root, int *size) {
+    if (root == NULL) {
+        *size = 0;
+        return NULL;
+    }
+
+    int capacity = 200;
+    int *array = (int *)malloc(capacity * sizeof(int));
+    Node *queue = NULL;
+    enqueue(&queue, root);
+    int count = 0;
+
+    while (queue != NULL) {
+        TreeNode *current = dequeue(&queue);
+        if (current == NULL) {
+            array[count++] = -1;
+        } else {
+            if (count == capacity) {
+                capacity *= 2;
+                array = (int *)realloc(array, capacity * sizeof(int));
+            }
+            array[count++] = current->val;
+            enqueue(&queue, current->left);
+            enqueue(&queue, current->right);
+        }
+    }
+
+    // Trim the array to remove extra null entries at the end
+    while (count > 0 && array[count - 1] == -1) {
+        count--;
+    }
+
+    *size = count;
+    return array;
 }
 
-TreeNode* SearchRightmost(TreeNode* root){
-	if (root == NULL)
-		return NULL;
-	
-	if (root->val != -1){
-		
-	}
-}
 
-TreeNode* levelorder(int arr[], int size){
-	if (size <= 0)
-		return NULL;
-	
-	TreeNode* root = (TreeNode*)malloc(sizeof(TreeNode));
-	root->val = arr[];
-	root->left = NULL;
-	root->right = NULL;
-	
-	Queue queue;
-	InitQueue(&queue);
-	Enqueue(&queue, root);
-	
-	int i = 1;
-	while(i < size){
-		TreeNode* parentNode = Peek(queue);
-		Dequeue(queue);
-		
-		if (arr[i] != -1){
-			TreeNode* left_child = (TreeNode*)malloc(sizeof(TreeNode));
-			left_child->val = arr[i];
-			left_child->left = NULL;
-			left_child->right = NULL;
-			parentNode->left = left_child;
-			Enqueue(queue, left_child);
-		}
-		else if (arr[i] == -1){
-			TreeNode* Node_null = (TreeNode*)malloc(sizeof(TreeNode));
-			Node_null->val = arr[i];
-			Node_null->left = NULL;
-			Node_null->right = NULL;
-			parentNode->left = Node_null;
-		}
-		i++;
-		
-		if (i<size && arr[i] != -1){
-			TreeNode* right_child = (TreeNode*)malloc(sizeof(TreeNode));
-			right_child->val = arr[i];
-			right_child->left = NULL;
-			right_child->right= NULL;
-			parentNode->right = right_child;
-			Enqueue(queue, right_child);
-		}
-		else if(i< size && arr[i] == -1){
-			TreeNode* Node_null = (TreeNode*)malloc(sizeof(TreeNode));
-			Node_null->val = arr[i];
-			Node_null->left = NULL;
-			Node_null->right= NULL;
-			parentNode->right = Node_null;
-		}
-		i++;
-	}
-	return root;
-}
 TreeNode* solution (TreeNode * root) {
 	// good luck
-	
 	return root;
 }
 
-void printTree(TreeNode* root){
-	if (root != NULL){
-		printf("%d ", root->val);
-		printTree(root->left_child);
-		printTree(root->right_child);
-	}
-}
 
 int main() {
 
@@ -142,11 +136,23 @@ int main() {
   	i = sscanf(str, "%d%*[ ]%[^\n]", &arr[cnt], str);
 	}
 	// 위 코드를 수행하면 arr 에는 각 원소에 입력으로 받은 노드들이 저장됩니다.
+	
+	TreeNode* root = createTree(arr, cnt);
+	
+	
 	///////////////////
 	
-	Levelorder(&root);
-	root = solution(&root);
+	root = solution(root);
+	
 	// print tree as array
-	printTree(&root);
+	
+	int size = 0;
+	int *array = treeToArray(root, &size);
+	for (int i = 0; i < size; i++) {
+			printf("%d ", array[i]);
+	}
+	printf("\n");
+	free(array);
+
 	return 0;
 }
